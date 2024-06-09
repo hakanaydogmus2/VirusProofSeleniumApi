@@ -12,16 +12,16 @@ namespace VirusProofSelenium.Controllers
     [Route("[controller]")]
     public class VirusJotiFileController : Controller
     {
-        public VirusJotiFile VirusJotiFile { get; set; }
-        [HttpGet]
-        public IActionResult GetVirusJotiFilesResult()
+        [HttpPost]
+        public IActionResult GetVirusJotiFilesResult(IFormFile file)
         {
             IWebDriver driver = new FirefoxDriver();
 
             // Web sayfasına gidin
             driver.Navigate().GoToUrl("https://virusscan.jotti.org/en-US/scan-file"); // URL'yi buraya ekleyin
             IWebElement webElement = driver.FindElement(By.Name("sample-file[]"));
-            webElement.SendKeys("C:\\Users\\hakayd\\Desktop\\SeleniumDeneme\\SelDel\\TextDeneme.txt");
+            var path = Path.GetFullPath(file.FileName);
+            webElement.SendKeys(path);
             // "stack-horizontally results" sınıfına sahip öğeleri bulun
             Thread.Sleep(10000);
             var resultElements = driver.FindElements(By.CssSelector(".stack-horizontally.results"));
@@ -46,7 +46,7 @@ namespace VirusProofSelenium.Controllers
             {
                 Console.Write(titles[titleIndex]);
                 var vjf = new VirusJotiFile();
-                vjf.FileName = "C:\\Users\\hakayd\\Desktop\\SeleniumDeneme\\SelDel\\TextDeneme.txt";
+                vjf.FileName = file.FileName;
                 vjf.AntiVirus = titles[titleIndex];
                 vjf.Result = titles[titleIndex + 1];
                 virusJotiFiles.Add(vjf);
