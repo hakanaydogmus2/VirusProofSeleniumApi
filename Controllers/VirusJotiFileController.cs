@@ -1,10 +1,12 @@
 ﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
 using VirusProofSelenium.Models;
 using System.Threading;
 using OpenQA.Selenium.Firefox;
+using VirusProofSelenium.Helper;
 
 namespace VirusProofSelenium.Controllers
 {
@@ -12,15 +14,23 @@ namespace VirusProofSelenium.Controllers
     [Route("[controller]")]
     public class VirusJotiFileController : Controller
     {
+        private readonly PathCreator _pathCreator;
+        public VirusJotiFileController(PathCreator pathCreator)
+        {
+            _pathCreator = pathCreator;
+        }
         [HttpPost]
-        public IActionResult GetVirusJotiFilesResult(IFormFile file)
+        public async Task<IActionResult> GetVirusJotiFilesResult(IFormFile file)
         {
             IWebDriver driver = new FirefoxDriver();
 
             // Web sayfasına gidin
             driver.Navigate().GoToUrl("https://virusscan.jotti.org/en-US/scan-file"); // URL'yi buraya ekleyin
             IWebElement webElement = driver.FindElement(By.Name("sample-file[]"));
-            var path = Path.GetFullPath(file.FileName);
+
+            var path = await _pathCreator.getPathOfFile(file);
+            Console.WriteLine(path);
+
             webElement.SendKeys(path);
             // "stack-horizontally results" sınıfına sahip öğeleri bulun
             Thread.Sleep(10000);
@@ -31,11 +41,11 @@ namespace VirusProofSelenium.Controllers
 
             foreach (var resultElement in resultElements)
             {
-                // "title" özelliğine sahip tüm öğeleri bulun
+                
                 var titleElements = resultElement.FindElements(By.CssSelector("[title]"));
                 foreach (var titleElement in titleElements)
                 {
-                    // "title" değerini alın ve listeye ekleyin
+                    
                     string title = titleElement.GetAttribute("title");
                     titles.Add(title);
                 }
@@ -56,5 +66,6 @@ namespace VirusProofSelenium.Controllers
             driver.Quit();
             return Ok(virusJotiFiles);
         }
+
     }
 }
